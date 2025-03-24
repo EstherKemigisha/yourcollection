@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emoji Quiz Game</title>
+  <style>
+    body {
+        background-color: rgb(250, 198, 130);
+      font-family: 'Arial', sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .quiz-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      width: 300px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    .emoji {
+      font-size: 4rem;
+      margin: 20px 0;
+    }
+    .options {
+      list-style: none;
+      padding: 0;
+    }
+    .options li {
+      background: #007bff;
+      color: white;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .options li:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .next-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h2>Emoji Quiz Game</h2>
+    <div class="question"></div>
+    <div class="emoji"></div>
+    <ul class="options"></ul>
+    <div class="result"></div>
+    <button class="next-btn">Next</button>
+  </div>
+
+  <script>
+    // Quiz data with emoji, question, options, and correct answer
+    const quizData = [
+      {
+        emoji: "🍕😋",
+        question: "What food is represented?",
+        options: ["Pizza", "Burger", "Sushi", "Salad"],
+        answer: "Pizza"
+      },
+      {
+        emoji: "🎬🍿",
+        question: "What activity is represented?",
+        options: ["Watching movies", "Eating popcorn", "Reading a book", "Sleeping"],
+        answer: "Watching movies"
+      },
+      {
+        emoji: "🚗💨",
+        question: "What does this emoji combination indicate?",
+        options: ["Driving fast", "Walking", "Flying", "Running"],
+        answer: "Driving fast"
+      },
+      {
+        emoji: "🏖️☀️",
+        question: "Where would you likely go?",
+        options: ["Beach", "Mountains", "City", "Forest"],
+        answer: "Beach"
+      }
+    ];
+
+    let currentQuiz = 0;
+
+    // DOM element references
+    const questionEl = document.querySelector(".question");
+    const emojiEl = document.querySelector(".emoji");
+    const optionsEl = document.querySelector(".options");
+    const resultEl = document.querySelector(".result");
+    const nextBtn = document.querySelector(".next-btn");
+
+    // Load a quiz question
+    function loadQuiz() {
+      resultEl.textContent = "";
+      nextBtn.style.display = "none";
+      optionsEl.innerHTML = "";
+      
+      const currentData = quizData[currentQuiz];
+      questionEl.textContent = currentData.question;
+      emojiEl.textContent = currentData.emoji;
+      
+      // Create options buttons dynamically
+      currentData.options.forEach(option => {
+        const li = document.createElement("li");
+        li.textContent = option;
+        li.addEventListener("click", () => selectOption(option, li));
+        optionsEl.appendChild(li);
+      });
+    }
+
+    // Handle option selection
+    function selectOption(selected, liElement) {
+      const currentData = quizData[currentQuiz];
+      // Disable further clicks on options
+      Array.from(optionsEl.children).forEach(li => li.style.pointerEvents = "none");
+      if (selected === currentData.answer) {
+        liElement.style.backgroundColor = "#28a745";
+        resultEl.textContent = "Correct!";
+      } else {
+        liElement.style.backgroundColor = "#dc3545";
+        resultEl.textContent = "Wrong! The answer is: " + currentData.answer;
+      }
+      nextBtn.style.display = "block";
+    }
+
+    // Load next question or end quiz
+    nextBtn.addEventListener("click", () => {
+      currentQuiz++;
+      if (currentQuiz < quizData.length) {
+        loadQuiz();
+      } else {
+        questionEl.textContent = "Quiz Completed!";
+        emojiEl.textContent = "";
+        optionsEl.innerHTML = "";
+        resultEl.textContent = "";
+        nextBtn.style.display = "none";
+      }
+    });
+
+    // Initialize the quiz on page load
+    loadQuiz();
+  </script>
+</body>
+</html>

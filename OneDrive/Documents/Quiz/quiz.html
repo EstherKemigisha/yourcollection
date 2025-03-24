@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emoji Quiz App</title>
+  <style>
+    /* Basic styling for a centered, clean UI */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f8ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .quiz-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      max-width: 90%;
+      padding: 20px;
+      text-align: center;
+    }
+    .quiz-container h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+    .emoji {
+      font-size: 4rem;
+      margin: 20px 0;
+    }
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+    .options {
+      list-style: none;
+      padding: 0;
+    }
+    .options li {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .options li:hover {
+      background: #0056b3;
+    }
+    .timer {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+    .result {
+      font-size: 1.2rem;
+      margin: 20px 0;
+    }
+    .reward {
+      color: green;
+      font-size: 1.4rem;
+      margin: 10px 0;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 10px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .history {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      text-align: left;
+      max-height: 150px;
+      overflow-y: auto;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>Emoji Quiz App</h1>
+    <!-- Timer display -->
+    <div class="timer">Time Left: <span id="time">10</span>s</div>
+    <!-- Emoji display -->
+    <div class="emoji" id="emojiDisplay"></div>
+    <!-- Question text -->
+    <div class="question" id="questionDisplay"></div>
+    <!-- Options list -->
+    <ul class="options" id="optionsList"></ul>
+    <!-- Feedback result -->
+    <div class="result" id="resultDisplay"></div>
+    <!-- Reward message -->
+    <div class="reward" id="rewardDisplay"></div>
+    <!-- Navigation buttons -->
+    <button id="nextButton" style="display:none;">Next Question</button>
+    <button id="retryButton" style="display:none;">Retry Quiz</button>
+    <button id="viewHistoryButton">View Quiz History</button>
+    <!-- Quiz history display -->
+    <div class="history" id="quizHistory" style="display:none;"></div>
+  </div>
+
+  <script>
+    // Quiz data: Each object contains an emoji, a question, options, and the correct answer.
+    const quizData = [
+      {
+        emoji: "🍕😋",
+        question: "What food is represented by these emojis?",
+        options: ["Pizza", "Burger", "Sushi", "Pasta"],
+        answer: "Pizza"
+      },
+      {
+        emoji: "🎬🍿",
+        question: "What activity do these emojis represent?",
+        options: ["Reading", "Watching movies", "Sleeping", "Cooking"],
+        answer: "Watching movies"
+      },
+      {
+        emoji: "🚗💨",
+        question: "What does this emoji combination indicate?",
+        options: ["Driving fast", "Walking", "Flying", "Cycling"],
+        answer: "Driving fast"
+      },
+      {
+        emoji: "🏖️☀️",
+        question: "Which place is suggested by these emojis?",
+        options: ["Beach", "Mountains", "City", "Forest"],
+        answer: "Beach"
+      }
+    ];
+
+    let currentQuiz = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 10;
+    let consecutiveCorrect = 0;
+    // Retrieve quiz history from localStorage (or initialize an empty array)
+    let quizHistory = JSON.parse(localStorage.getItem('quizHistory')) || [];
+
+    // DOM element references
+    const emojiDisplay = document.getElementById("emojiDisplay");
+    const questionDisplay = document.getElementById("questionDisplay");
+    const optionsList = document.getElementById("optionsList");
+    const resultDisplay = document.getElementById("resultDisplay");
+    const rewardDisplay = document.getElementById("rewardDisplay");
+    const timeDisplay = document.getElementById("time");
+    const nextButton = document.getElementById("nextButton");
+    const retryButton = document.getElementById("retryButton");
+    const viewHistoryButton = document.getElementById("viewHistoryButton");
+    const quizHistoryDiv = document.getElementById("quizHistory");
+
+    // Function to load the current quiz question and start the timer
+    function loadQuiz() {
+      clearInterval(timer);
+      timeLeft = 10;
+      timeDisplay.textContent = timeLeft;
+      timer = setInterval(countdown, 1000);
+
+      // Clear previous question data
+      resultDisplay.textContent = "";
+      rewardDisplay.textContent = "";
+      optionsList.innerHTML = "";
+      nextButton.style.display = "none";
+
+      const currentData = quizData[currentQuiz];
+      emojiDisplay.textContent = currentData.emoji;
+      questionDisplay.textContent = currentData.question;
+
+      // Create clickable options dynamically
+      currentData.options.forEach(option => {
+        const li = document.createElement("li");
+        li.textContent = option;
+        li.addEventListener("click", () => selectOption(option, li));
+        optionsList.appendChild(li);
+      });
+    }
+
+    // Countdown function for the timer
+    function countdown() {
+      timeLeft--;
+      timeDisplay.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        resultDisplay.textContent = "Time's up! The correct answer was: " + quizData[currentQuiz].answer;
+        disableOptions();
+        nextButton.style.display = "block";
+        consecutiveCorrect = 0; // Reset streak on timeout
+      }
+    }
+
+    // Disable clicking on options after an answer is chosen or time runs out
+    function disableOptions() {
+      const items = optionsList.getElementsByTagName("li");
+      for (let item of items) {
+        item.style.pointerEvents = "none";
+      }
+    }
+
+    // Function to handle option selection
+    function selectOption(selected, liElement) {
+      clearInterval(timer);
+      disableOptions();
+      const currentData = quizData[currentQuiz];
+      if (selected === currentData.answer) {
+        score++;
+        resultDisplay.textContent = "Correct!";
+        liElement.style.backgroundColor = "#28a745";
+        consecutiveCorrect++;
+      } else {
+        resultDisplay.textContent = "Wrong! The correct answer was: " + currentData.answer;
+        liElement.style.backgroundColor = "#dc3545";
+        consecutiveCorrect = 0;
+      }
+      // Reward system: Show bonus message every 3 consecutive correct answers
+      if (consecutiveCorrect > 0 && consecutiveCorrect % 3 === 0) {
+        rewardDisplay.textContent = "🎉 Bonus Reward Unlocked for " + consecutiveCorrect + " consecutive correct answers!";
+      }
+      nextButton.style.display = "block";
+    }
+
+    // Next button event: Move to the next question or finish the quiz
+    nextButton.addEventListener("click", () => {
+      currentQuiz++;
+      if (currentQuiz < quizData.length) {
+        loadQuiz();
+      } else {
+        endQuiz();
+      }
+    });
+
+    // End the quiz: Show final score and save result to history
+    function endQuiz() {
+      clearInterval(timer);
+      emojiDisplay.textContent = "";
+      questionDisplay.textContent = "Quiz Completed!";
+      optionsList.innerHTML = "";
+      resultDisplay.textContent = "Your score: " + score + " out of " + quizData.length;
+      nextButton.style.display = "none";
+      retryButton.style.display = "block";
+
+      // Save the quiz result with a timestamp
+      const quizResult = {
+        date: new Date().toLocaleString(),
+        score: score,
+        total: quizData.length
+      };
+      quizHistory.push(quizResult);
+      localStorage.setItem('quizHistory', JSON.stringify(quizHistory));
+    }
+
+    // Retry button event: Reset quiz variables and start over
+    retryButton.addEventListener("click", () => {
+      currentQuiz = 0;
+      score = 0;
+      consecutiveCorrect = 0;
+      retryButton.style.display = "none";
+      loadQuiz();
+    });
+
+    // Toggle quiz history display
+    viewHistoryButton.addEventListener("click", () => {
+      if (quizHistoryDiv.style.display === "none") {
+        quizHistoryDiv.style.display = "block";
+        renderHistory();
+      } else {
+        quizHistoryDiv.style.display = "none";
+      }
+    });
+
+    // Render quiz history from localStorage
+    function renderHistory() {
+      quizHistoryDiv.innerHTML = "<h3>Quiz History</h3>";
+      if (quizHistory.length === 0) {
+        quizHistoryDiv.innerHTML += "<p>No history available.</p>";
+      } else {
+        const ul = document.createElement("ul");
+        quizHistory.forEach(result => {
+          const li = document.createElement("li");
+          li.textContent = result.date + " - Score: " + result.score + "/" + result.total;
+          ul.appendChild(li);
+        });
+        quizHistoryDiv.appendChild(ul);
+      }
+    }
+
+    // Initialize the quiz when the page loads
+    loadQuiz();
+  </script>
+</body>
+</html>
