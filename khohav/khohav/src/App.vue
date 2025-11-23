@@ -165,7 +165,7 @@ import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
 
 // Assets
-import gold from './assets/gold.jpg'
+import khohav from './assets/khohav.png'
 import earings from './assets/earings.jpg'
 import hear from './assets/hear.jpg'
 import kin from './assets/kin.jpg'
@@ -174,7 +174,7 @@ import ten from './assets/ten.jpg'
 import beauty from './assets/beauty.png'
 import yey from './assets/yey.jpg'
 
-const videoSrc = gold
+const videoSrc = khohav
 const checkoutProduct = ref(null)
 const selectedPayment = ref('Mobile Money (MTN/Airtel)')
 
